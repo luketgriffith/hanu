@@ -14,7 +14,7 @@ type ConversationInterface interface {
 	String(name string) (string, error)
 	Reply(text string, a ...interface{})
 	Match(position int) (string, error)
-
+	SpecialReply(text string, a ...interface{})
 	SetConnection(connection Connection)
 
 	send(msg MessageInterface)
@@ -48,6 +48,20 @@ func (c *Conversation) SetConnection(connection Connection) {
 
 // Reply sends message using the socket to Slack
 func (c *Conversation) Reply(text string, a ...interface{}) {
+	prefix := ""
+
+	if !c.message.IsDirectMessage() {
+		prefix = "<@" + c.message.User() + ">: "
+	}
+
+	msg := c.message
+	msg.SetText(prefix + fmt.Sprintf(text, a...))
+
+	c.send(msg)
+}
+
+// Reply sends message using the socket to Slack
+func (c *Conversation) SpecialReply(text string, a ...interface{}) {
 	prefix := ""
 
 	if !c.message.IsDirectMessage() {
