@@ -27,25 +27,6 @@ type Message struct {
 	Message string `json:"text"`
 }
 
-type SpecialMessageInterface interface {
-	IsMessage() bool
-	IsFrom(user string) bool
-	IsHelpRequest() bool
-	IsDirectMessage() bool
-	IsMentionFor(user string) bool
-	IsRelevantFor(user string) bool
-
-	Text() string
-	User() string
-}
-
-type SpecialMessage struct {
-	ID      uint64 `json:"id"`
-	Type    string `json:"type"`
-	Channel string `json:"channel"`
-	UserID  string `json:"user"`
-	Message struct `json:"text"`
-}
 
 // Text returns the message text
 func (m Message) Text() string {

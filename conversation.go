@@ -2,9 +2,9 @@ package hanu
 
 import (
 	"fmt"
-
+	// "encoding/json"
 	"golang.org/x/net/websocket"
-
+	"github.com/redventures/fuse-server/models"
 	"github.com/sbstjn/allot"
 )
 
@@ -14,7 +14,7 @@ type ConversationInterface interface {
 	String(name string) (string, error)
 	Reply(text string, a ...interface{})
 	Match(position int) (string, error)
-	SpecialReply(text string, a ...interface{})
+	SpecialReply(res models.Pool, a ...interface{})
 	SetConnection(connection Connection)
 
 	send(msg MessageInterface)
@@ -29,6 +29,7 @@ type Connection interface {
 // to the handler function
 type Conversation struct {
 	message Message
+	specialMessage SpecialMessage
 	match   allot.MatchInterface
 	socket  *websocket.Conn
 
@@ -61,17 +62,24 @@ func (c *Conversation) Reply(text string, a ...interface{}) {
 }
 
 // Reply sends message using the socket to Slack
-func (c *Conversation) SpecialReply(text string, a ...interface{}) {
-	prefix := ""
+func (c *Conversation) SpecialReply(res models.Pool, a ...interface{}) {
+	// prefix := ""
+	fmt.Printf("terrible mate")
+	fmt.Printf("%+v\n", res)
+	// nums, numErr := json.Marshal(res)
+	// if numErr != nil {
+	// } else {
+	//
+	// 	fmt.Printf("%+v\n", nums)
+	// }
+	// if !c.specialMessage.IsDirectMessage() {
+	// 	prefix = "<@" + c.specialMessage.User() + ">: "
+	// }
 
-	if !c.message.IsDirectMessage() {
-		prefix = "<@" + c.message.User() + ">: "
-	}
-
-	msg := c.message
-	msg.SetText(prefix + fmt.Sprintf(text, a...))
-
-	c.send(msg)
+	// msg := c.specialMessage
+	// msg.SetText(prefix + fmt.Sprintf(text, a...))
+	//
+	// c.send(msg)
 }
 
 // String return string paramter
@@ -96,7 +104,7 @@ func NewConversation(match allot.MatchInterface, msg Message, socket *websocket.
 		match:   match,
 		socket:  socket,
 	}
-
+	// fmt.Printf("%+v\n", conv)
 	conv.SetConnection(websocket.JSON)
 
 	return conv
