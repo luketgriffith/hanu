@@ -1,19 +1,20 @@
 package hanu
 
-//import (
+import (
 	//"regexp"
-	//"strings"
-//)
+  //"encoding/json"
+  //"github.com/guregu/null"
+ "strconv"
+	"strings"
+  "fmt"
+  "github.com/redventures/fuse-server/models"
+)
 
 type SpecialMessageInterface interface {
 	IsMessage() bool
 	IsFrom(user string) bool
-	IsHelpRequest() bool
 	IsDirectMessage() bool
-	IsMentionFor(user string) bool
 	IsRelevantFor(user string) bool
-
-
 	User() string
 }
 
@@ -26,99 +27,80 @@ type SpecialMessage struct {
 }
 
 type Attachment struct {
-  Fallback string
-  Color string
-  Pretext string
-  Title string
-  Text string
-  Fields []Field
+  Fallback string `json:"fallback"`
+  Color string `json:"color"`
+  Pretext string `json:"pretext"`
+  Title string `json:"title"`
+  Text string `json:"text"`
+  Fields []Field `json:"fields"`
 }
 
 type Field struct {
-  Title string
-  Value string
-  Short bool
+  Title string `json:"title"`
+  Value string `json:"value"`
+  Short bool  `json:"short"`
 }
 
-// Text returns the message text
-// func (m SpecialMessage) Text() string {
-// 	return m.Message
-// }
+func (f *Field) SetFieldTitle(s string) {
+  f.Title = s
+}
 
-// User returns the message text
-// func (m SpecialMessage) User() string {
-// 	return m.UserID
-// }
+func (f *Field) SetFieldValue(s int64, n int64) {
+  m := strconv.FormatInt(s, 10)
+  v := strconv.FormatInt(n, 10)
+  newLine := "Phone numbers remaining: " + m + " Phone Numbers Total: " + v
+  f.Value = newLine
+}
 
-// IsMessage checks if it is a Message or some other kind of processing information
-// func (m SpecialMessage) IsMessage() bool {
-// 	return m.Type == "message"
-// }
-//
-// // IsFrom checks the sender of the message
-// func (m SpecialMessage) IsFrom(user string) bool {
-// 	return m.UserID == user
-// }
-//
-// // SetText updates the text of a message
-// func (m *SpecialMessage) SetText(text string) {
-// 	m.SpecialMessage = text
-// }
+func (f *Field) SetFieldShort(s bool) {
+  f.Short = s
+}
 
-// StripMention removes the mention from the message beginning
-// func (m *SpecialMessage) StripMention(user string) {
-// 	prefix := "<@" + user + "> "
-// 	text := m.Text()
+// User returns the message's User ID
+func (m SpecialMessage) User() string {
+	return m.UserID
+}
+
+//IsMessage checks if it is a Message or some other kind of processing information
+func (m SpecialMessage) IsMessage() bool {
+	return m.Type == "message"
+}
 //
-// 	if strings.HasPrefix(text, prefix) {
-// 		m.SetText(text[len(prefix):len(text)])
-// 	}
-// }
-//
-// // StripLinkMarkup converts <http://google.com|google.com> into google.com etc.
-// // https://api.slack.com/docs/message-formatting#how_to_display_formatted_messages
-// func (m *SpecialMessage) StripLinkMarkup() {
-// 	re := regexp.MustCompile("<(.*?)>")
-// 	result := re.FindAllStringSubmatch(m.Text(), -1)
-// 	text := m.Text()
-//
-// 	var link string
-// 	for _, c := range result {
-// 		link = c[len(c)-1]
-//
-// 		// Done change Channel, User or Specials tags
-// 		if link[:2] == "#C" || link[:2] == "@U" || link[:1] == "!" {
-// 			continue
-// 		}
-//
-// 		url := link
-// 		if strings.Contains(link, "|") {
-// 			splits := strings.Split(link, "|")
-// 			url = splits[1]
-// 		}
-//
-// 		text = strings.Replace(text, "<"+link+">", url, -1)
-// 	}
-//
-// 	m.SetText(text)
-// }
-//
-// // IsHelpRequest checks if the user requests the help command
-// func (m SpecialMessage) IsHelpRequest() bool {
-// 	return strings.HasSuffix(m.Message, "help") || strings.HasPrefix(m.Message, "help")
-// }
-//
+// IsFrom checks the sender of the message
+func (m SpecialMessage) IsFrom(user string) bool {
+	return m.UserID == user
+}
+
+
+func (m *SpecialMessage) SetSpecialMessage(sm models.Pool) {
+  field := Field{}
+  field.SetFieldTitle(sm.Name)
+  field.SetFieldValue(sm.PhoneNumbersAvailable.Int64, sm.PhoneNumbersTotal.Int64)
+  field.SetFieldShort(true)
+
+  slice := []Field{field}
+
+  attachment := Attachment{
+    Fallback: "Fuse Status",
+    Color: "#7CD197",
+    Pretext: "Fuse Status",
+    Title: "Fuse Status",
+    Text: "Fuse Status",
+    Fields: slice,
+  }
+  fmt.Printf("%+v\n", attachment)
+
+  attach := []Attachment{attachment}
+  m.Attachments = attach;
+}
+
+
 // // IsDirectMessage checks if the message is received using a direct messaging channel
-// func (m SpecialMessage) IsDirectMessage() bool {
-// 	return strings.HasPrefix(m.Channel, "D")
-// }
+func (m SpecialMessage) IsDirectMessage() bool {
+	return strings.HasPrefix(m.Channel, "D")
+}
 //
-// // IsMentionFor checks if the given user was mentioned with the message
-// func (m SpecialMessage) IsMentionFor(user string) bool {
-// 	return strings.HasPrefix(m.Message, "<@"+user+">")
-// }
-//
-// // IsRelevantFor checks if the message is relevant for a user
-// func (m SpecialMessage) IsRelevantFor(user string) bool {
-// 	return m.IsMessage() && !m.IsFrom(user) && (m.IsDirectMessage() || m.IsMentionFor(user))
-// }
+// IsRelevantFor checks if the message is relevant for a user
+func (m SpecialMessage) IsRelevantFor(user string) bool {
+	return m.IsMessage() && !m.IsFrom(user) && (m.IsDirectMessage())
+}

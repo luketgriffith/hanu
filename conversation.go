@@ -2,7 +2,7 @@ package hanu
 
 import (
 	"fmt"
-	// "encoding/json"
+	//"encoding/json"
 	"golang.org/x/net/websocket"
 	"github.com/redventures/fuse-server/models"
 	"github.com/sbstjn/allot"
@@ -42,6 +42,14 @@ func (c *Conversation) send(msg MessageInterface) {
 	}
 }
 
+func (c *Conversation) sendSpecial(msg SpecialMessageInterface) {
+	if c.socket != nil {
+		fmt.Printf("EEEEEEEEEEEEEEEEEEEEEEEEEE7")
+		fmt.Printf("%+v\n", msg)
+		c.connection.Send(c.socket, msg)
+	}
+}
+
 // SetConnection sets the conversation connection
 func (c *Conversation) SetConnection(connection Connection) {
 	c.connection = connection
@@ -63,23 +71,18 @@ func (c *Conversation) Reply(text string, a ...interface{}) {
 
 // Reply sends message using the socket to Slack
 func (c *Conversation) SpecialReply(res models.Pool, a ...interface{}) {
-	// prefix := ""
-	fmt.Printf("terrible mate")
-	fmt.Printf("%+v\n", res)
-	// nums, numErr := json.Marshal(res)
-	// if numErr != nil {
-	// } else {
-	//
-	// 	fmt.Printf("%+v\n", nums)
-	// }
-	// if !c.specialMessage.IsDirectMessage() {
-	// 	prefix = "<@" + c.specialMessage.User() + ">: "
-	// }
+	prefix := ""
 
-	// msg := c.specialMessage
+	fmt.Printf("%+v\n", res)
+	if !c.specialMessage.IsDirectMessage() {
+		prefix = "<@" + c.specialMessage.User() + ">: "
+	}
+	fmt.Printf("%+v\n", prefix)
+	msg := c.specialMessage
+	msg.SetSpecialMessage(res)
 	// msg.SetText(prefix + fmt.Sprintf(text, a...))
 	//
-	// c.send(msg)
+	c.sendSpecial(msg)
 }
 
 // String return string paramter
